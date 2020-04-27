@@ -1,6 +1,6 @@
 
 Duck Bot
-########
+========
 
 Testing out the discord bot API.
 Not a production ready bot, just some fun.
