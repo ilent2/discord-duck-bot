@@ -10,6 +10,13 @@ load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
 UNAMES = os.getenv('DISCORD_UNAMES').strip().split(', ')
 
+_dtypes = {
+    UNAMES[0]: 2,
+    UNAMES[1]: 0,
+    UNAMES[2]: 20,
+    UNAMES[3]: 6,
+}
+
 file_list = ['001.jpg', '002.jpg', '003.jpg', '004.jpg',
         '005.jpg', '006.jpg', '007.jpg', '008.jpg', '009.jpg', '010.jpg'];
 
@@ -38,21 +45,7 @@ async def send_goose_link(ctx):
 async def send_goose_link(ctx, *, arg):
 
     user_name = str(ctx.author)
-    if user_name == UNAMES[0]:
-        dtype = 2
-
-    elif user_name == UNAMES[1]:
-        dtype = 0
-
-    elif user_name == UNAMES[2]:
-        dtype = 20
-
-    elif user_name == UNAMES[3]:
-        dtype = 6
-
-    else:
-        print('Unknown user: ' + user_name)
-        dtype = 0
+    dtype = _dtypes.get(user_name, 0)
 
     # Parse input
     parts = arg.split('+')
@@ -65,30 +58,22 @@ async def send_goose_link(ctx, *, arg):
 
     def parse_part(part):
 
-        if type(part) is str and 'd' in part:
-            num, sides = [int(n) for n in part.split('d')]
+        if isinstance(part, str) and 'd' in part:
+            num, sides = [int(n) for n in part.split('d', maxsplit=1)]
 
-            if dtype != 0:
-                rolls = roll(num, dtype)
-            else:
-                rolls = roll(num, sides)
+            rolls = roll(num, sides if dtype == 0 else dtype)
 
             dice.extend(rolls)
             return sum(rolls)
 
+        return int(part)
+
+    parts = [[parse_part(p) for p in part] for part in parts]
+    for i, part in enumerate(parts):
+        if len(part) > 1:
+            parts[i] = part[0] - sum(part[:1])
         else:
-            return int(part)
-
-
-    for ii in range(len(parts)):
-        for jj in range(len(parts[ii])):
-
-            parts[ii][jj] = parse_part(parts[ii][jj])
-
-        if len(parts[ii]) > 1:
-            parts[ii] = parts[ii][0] - sum(parts[ii][1:])
-        else:
-            parts[ii] = parse_part(parts[ii][0])
+            parts[i] = parse_part(part[0])
 
     result = sum(parts)
 
